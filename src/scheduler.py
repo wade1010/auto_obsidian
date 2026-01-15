@@ -97,7 +97,7 @@ class NoteScheduler:
             scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
 
             # 如果设置的时间已过，设置为明天同一时间
-            if scheduled_time <= now:
+            if scheduled_time < now:
                 from datetime import timedelta
                 scheduled_time += timedelta(days=1)
 

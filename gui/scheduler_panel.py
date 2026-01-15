@@ -78,7 +78,7 @@ class SchedulerPanel(QWidget):
         mode_layout = QHBoxLayout()
         mode_layout.addWidget(QLabel("执行模式:"))
         self.mode_combo = QComboBox()
-        self.mode_combo.addItems(["每天执行", "每小时执行", "自定义间隔"])
+        self.mode_combo.addItems(["每天执行", "自定义间隔"])
         mode_layout.addWidget(self.mode_combo)
         layout.addLayout(mode_layout)
 
@@ -232,13 +232,6 @@ class SchedulerPanel(QWidget):
             self.interval_spin.setEnabled(False)
             self.interval_unit_combo.setEnabled(False)
             logger.info("每天执行: 执行时间启用，间隔时间禁用")
-        elif mode == "每小时执行":
-            # 每小时执行：需要设置间隔时间（固定用小时）
-            self.time_layout.setEnabled(False)
-            self.interval_layout.setEnabled(True)
-            self.interval_spin.setEnabled(True)
-            self.interval_unit_combo.setEnabled(False)  # 禁用单位选择，固定用小时
-            logger.info("每小时执行: 执行时间禁用，间隔时间启用，单位禁用")
         else:  # 自定义间隔
             # 自定义间隔：需要设置间隔时间和单位
             self.time_layout.setEnabled(False)
@@ -321,12 +314,6 @@ class SchedulerPanel(QWidget):
                 time_str = self.time_edit.time().toString("HH:mm")
                 success = scheduler.setup_daily_job(
                     time_str=time_str,
-                    batch_size=batch_size,
-                    topics=self.topics
-                )
-            elif mode == "每小时执行":
-                success = scheduler.setup_interval_job(
-                    hours=1,
                     batch_size=batch_size,
                     topics=self.topics
                 )
