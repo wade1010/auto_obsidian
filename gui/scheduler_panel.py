@@ -57,6 +57,18 @@ class SchedulerPanel(QWidget):
 
         layout.addStretch()
 
+        # 在所有UI创建完成后，连接信号
+        self.mode_combo.currentTextChanged.connect(self._on_mode_changed)
+        self.interval_unit_combo.currentTextChanged.connect(self._on_interval_unit_changed)
+
+        # 初始化为"每天执行"模式，并手动调用一次设置状态
+        # 使用 blockSignals 避免重复触发
+        self.mode_combo.blockSignals(True)
+        self.mode_combo.setCurrentIndex(0)
+        self.mode_combo.blockSignals(False)
+        # 手动调用设置初始状态
+        self._on_mode_changed("每天执行")
+
     def _create_settings_group(self) -> QGroupBox:
         """创建定时设置组"""
         group = QGroupBox("定时设置")
@@ -67,7 +79,6 @@ class SchedulerPanel(QWidget):
         mode_layout.addWidget(QLabel("执行模式:"))
         self.mode_combo = QComboBox()
         self.mode_combo.addItems(["每天执行", "每小时执行", "自定义间隔"])
-        self.mode_combo.currentTextChanged.connect(self._on_mode_changed)
         mode_layout.addWidget(self.mode_combo)
         layout.addLayout(mode_layout)
 
@@ -95,11 +106,9 @@ class SchedulerPanel(QWidget):
         # 添加时间单位选择器
         self.interval_unit_combo = QComboBox()
         self.interval_unit_combo.addItems(["小时", "分钟"])
-        self.interval_unit_combo.currentTextChanged.connect(self._on_interval_unit_changed)
         self.interval_layout.addWidget(self.interval_unit_combo)
 
         layout.addLayout(self.interval_layout)
-        self.interval_layout.setEnabled(False)
 
         # 每次生成数量
         batch_layout = QHBoxLayout()
@@ -214,18 +223,29 @@ class SchedulerPanel(QWidget):
 
     def _on_mode_changed(self, mode: str):
         """模式改变事件"""
+        logger.info(f"模式切换为: {mode}")
+
         if mode == "每天执行":
+            # 每天执行：只需要设置执行时间，间隔时间禁用
             self.time_layout.setEnabled(True)
             self.interval_layout.setEnabled(False)
-            self.interval_unit_combo.setEnabled(False)  # 禁用单位选择器
+            self.interval_spin.setEnabled(False)
+            self.interval_unit_combo.setEnabled(False)
+            logger.info("每天执行: 执行时间启用，间隔时间禁用")
         elif mode == "每小时执行":
-            self.time_layout.setEnabled(False)
-            self.interval_layout.setEnabled(False)
-            self.interval_unit_combo.setEnabled(False)  # 禁用单位选择器
-        else:  # 自定义间隔
+            # 每小时执行：需要设置间隔时间（固定用小时）
             self.time_layout.setEnabled(False)
             self.interval_layout.setEnabled(True)
-            self.interval_unit_combo.setEnabled(True)  # 启用单位选择器
+            self.interval_spin.setEnabled(True)
+            self.interval_unit_combo.setEnabled(False)  # 禁用单位选择，固定用小时
+            logger.info("每小时执行: 执行时间禁用，间隔时间启用，单位禁用")
+        else:  # 自定义间隔
+            # 自定义间隔：需要设置间隔时间和单位
+            self.time_layout.setEnabled(False)
+            self.interval_layout.setEnabled(True)
+            self.interval_spin.setEnabled(True)
+            self.interval_unit_combo.setEnabled(True)  # 启用单位选择
+            logger.info("自定义间隔: 执行时间禁用，间隔时间和单位都启用")
 
     def _on_interval_unit_changed(self, unit: str):
         """间隔单位改变事件"""
