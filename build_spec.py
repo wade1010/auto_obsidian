@@ -9,19 +9,23 @@ PyInstaller打包配置
 block_cipher = None
 
 a = Analysis(
-    ['main.py'],
+    ['gui/main_window.py'],
     pathex=[],
     binaries=[],
     datas=[
         ('config', 'config'),  # 包含配置文件目录
     ],
     hiddenimports=[
-        'PyQt6',
+        'PyQt5',
+        'PyQt5.QtWidgets',
+        'PyQt5.QtCore',
+        'PyQt5.QtGui',
         'yaml',
         'zhipuai',
         'openai',
         'git',
         'apscheduler',
+        'apscheduler.schedulers.qt',
         'src',
         'src.ai_providers',
         'gui',
@@ -52,7 +56,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # 不显示控制台窗口
+    console=True,  # 显示控制台窗口以便调试
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

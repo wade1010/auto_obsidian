@@ -1,38 +1,38 @@
 @echo off
 REM ========================================
-REM 更新依赖包脚本
+REM Update Dependencies Script
 REM ========================================
 
 set ENV_NAME=venv
 
 echo.
 echo ========================================
-echo 更新 Auto Obsidian 依赖包
+echo Update Auto Obsidian Dependencies
 echo ========================================
 echo.
 
-REM 检查虚拟环境
+REM Check virtual environment
 if not exist %ENV_NAME% (
-    echo [错误] 虚拟环境不存在
-    echo 请先运行 setup_env.bat
+    echo [ERROR] Virtual environment not found
+    echo Please run setup_env.bat first
     pause
     exit /b 1
 )
 
-REM 激活环境
+REM Activate environment
 call %ENV_NAME%\Scripts\activate.bat
 
-REM 更新 pip
-echo [1/2] 升级 pip...
+REM Update pip
+echo [1/2] Upgrading pip...
 python -m pip install --upgrade pip
 
 echo.
-echo [2/2] 更新依赖包...
+echo [2/2] Updating dependencies...
 pip install --upgrade -r requirements.txt
 
 echo.
 echo ========================================
-echo 依赖更新完成！
+echo Dependencies updated successfully!
 echo ========================================
 echo.
 

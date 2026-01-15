@@ -1,88 +1,88 @@
 @echo off
 REM ========================================
-REM Auto Obsidian 环境设置脚本
-REM 自动创建虚拟环境并安装依赖
+REM Auto Obsidian Environment Setup
+REM Create virtual environment and install dependencies
 REM ========================================
 
 echo.
 echo ========================================
-echo Auto Obsidian 环境设置
+echo Auto Obsidian Environment Setup
 echo ========================================
 echo.
 
-REM 设置环境名称
+REM Set environment name
 set ENV_NAME=venv
 set REQUIREMENTS=requirements.txt
 
-REM 检查 Python 是否安装
+REM Check if Python is installed
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] Python 未安装或不在 PATH 中
-    echo 请先安装 Python 3.8+
+    echo [ERROR] Python is not installed or not in PATH
+    echo Please install Python 3.8+ first
     pause
     exit /b 1
 )
 
-echo [1/5] 检测 Python 版本...
+echo [1/5] Checking Python version...
 python --version
 
 echo.
-echo [2/5] 创建虚拟环境 (%ENV_NAME%)...
+echo [2/5] Creating virtual environment (%ENV_NAME%)...
 if exist %ENV_NAME% (
-    echo 虚拟环境已存在，跳过创建
+    echo Virtual environment already exists, skipping
 ) else (
     python -m venv %ENV_NAME%
     if errorlevel 1 (
-        echo [错误] 创建虚拟环境失败
+        echo [ERROR] Failed to create virtual environment
         pause
         exit /b 1
     )
-    echo 虚拟环境创建成功
+    echo Virtual environment created successfully
 )
 
 echo.
-echo [3/5] 激活虚拟环境...
+echo [3/5] Activating virtual environment...
 call %ENV_NAME%\Scripts\activate.bat
 if errorlevel 1 (
-    echo [错误] 激活虚拟环境失败
+    echo [ERROR] Failed to activate virtual environment
     pause
     exit /b 1
 )
 
 echo.
-echo [4/5] 升级 pip...
+echo [4/5] Upgrading pip...
 python -m pip install --upgrade pip
 
 echo.
-echo [5/5] 安装依赖包...
-echo 这可能需要几分钟，请耐心等待...
+echo [5/5] Installing dependencies...
+echo This may take a few minutes, please wait...
 echo.
 
 pip install -r %REQUIREMENTS%
 if errorlevel 1 (
     echo.
-    echo [错误] 依赖安装失败
-    echo 请检查网络连接或手动运行: pip install -r %REQUIREMENTS%
+    echo [ERROR] Failed to install dependencies
+    echo Please check your network or run manually: pip install -r %REQUIREMENTS%
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo 环境设置完成！
+echo Setup completed successfully!
 echo ========================================
 echo.
-echo 虚拟环境位置: %cd%\%ENV_NAME%
+echo Virtual environment location: %cd%\%ENV_NAME%
 echo.
-echo 使用方法:
-echo   1. 激活环境: %ENV_NAME%\Scripts\activate.bat
-echo   2. 运行程序: python main.py
-echo   3. 打包EXE:   build.bat
+echo Usage:
+echo   1. Activate: %ENV_NAME%\Scripts\activate.bat
+echo   2. Run app:  python gui/main_window.py
+echo   3. Build EXE: build_exe.bat
 echo.
-echo 下一步:
-echo   - 编辑 config/config.yaml 配置 API Key
-echo   - 运行: %ENV_NAME%\Scripts\activate.bat
-echo   - 运行: python main.py
+echo Next steps:
+echo   - Edit config/config.yaml to configure API Key
+echo   - Run: %ENV_NAME%\Scripts\activate.bat
+echo   - Run: python gui/main_window.py
 echo.
 
 pause
