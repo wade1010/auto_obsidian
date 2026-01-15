@@ -264,6 +264,27 @@ class ConfigPanel(QWidget):
         """保存配置"""
         try:
             import yaml
+            import sys
+            from pathlib import Path
+
+            # 导入加密工具
+            project_root = Path(__file__).parent.parent
+            if str(project_root) not in sys.path:
+                sys.path.insert(0, str(project_root))
+
+            from src.crypto_utils import get_crypto_manager
+
+            # 获取 API key
+            api_key = self.api_key_edit.text()
+
+            # 加密 API key
+            crypto_manager = get_crypto_manager()
+            encrypted_key = crypto_manager.encrypt(api_key)
+
+            if crypto_manager.is_available():
+                logger.info("API key 已加密保存")
+            else:
+                logger.warning("cryptography 库不可用，API key 使用 Base64 编码保存")
 
             # 收集配置
             self.config = {
@@ -273,7 +294,7 @@ class ConfigPanel(QWidget):
                 },
                 "ai": {
                     "provider": self.provider_combo.currentText(),
-                    "api_key": self.api_key_edit.text(),
+                    "api_key": encrypted_key,  # 保存加密后的 API key
                     "model": self.model_combo.currentText(),
                     "language": self.language_combo.currentText(),
                     "style": self.style_combo.currentText()
@@ -297,7 +318,7 @@ class ConfigPanel(QWidget):
             if save_dir:
                 self._add_to_history(save_dir)
 
-            QMessageBox.information(self, "成功", "配置已保存")
+            QMessageBox.information(self, "成功", "配置已保存\n(API Key 已加密)")
             logger.info("配置已保存到 config/config.yaml")
 
         except Exception as e:
@@ -312,6 +333,8 @@ class ConfigPanel(QWidget):
         """重新加载配置"""
         try:
             import yaml
+            import sys
+            from pathlib import Path
 
             config_file = Path("config/config.yaml")
             if not config_file.exists():
@@ -320,6 +343,13 @@ class ConfigPanel(QWidget):
 
             with open(config_file, 'r', encoding='utf-8') as f:
                 self.config = yaml.safe_load(f)
+
+            # 导入加密工具
+            project_root = Path(__file__).parent.parent
+            if str(project_root) not in sys.path:
+                sys.path.insert(0, str(project_root))
+
+            from src.crypto_utils import get_crypto_manager
 
             # 更新UI
             obsidian_config = self.config.get("obsidian", {})
@@ -334,7 +364,17 @@ class ConfigPanel(QWidget):
             if index >= 0:
                 self.provider_combo.setCurrentIndex(index)
 
-            self.api_key_edit.setText(ai_config.get("api_key", ""))
+            # 解密 API key
+            encrypted_key = ai_config.get("api_key", "")
+            crypto_manager = get_crypto_manager()
+            decrypted_key = crypto_manager.decrypt(encrypted_key)
+            self.api_key_edit.setText(decrypted_key)
+
+            if encrypted_key and encrypted_key.startswith(("encrypted:", "encoded:")):
+                if crypto_manager.is_available():
+                    logger.info("API key 已解密")
+                else:
+                    logger.warning("API key 是加密的，但 cryptography 库不可用")
 
             model = ai_config.get("model", "glm-4")
             index = self.model_combo.findText(model)
