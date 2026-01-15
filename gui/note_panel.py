@@ -194,8 +194,20 @@ class NotePanel(QWidget):
         """加载预设主题"""
         try:
             import yaml
+            import sys
+            from pathlib import Path
 
-            topics_file = "config/topics.yaml"
+            # 添加项目根目录到路径
+            project_root = Path(__file__).parent.parent
+            if str(project_root) not in sys.path:
+                sys.path.insert(0, str(project_root))
+
+            from src.config_manager import get_config_path_manager
+
+            # 获取 topics 文件路径
+            config_path_manager = get_config_path_manager()
+            topics_file = config_path_manager.get_topics_file()
+
             with open(topics_file, 'r', encoding='utf-8') as f:
                 topics_data = yaml.safe_load(f)
 

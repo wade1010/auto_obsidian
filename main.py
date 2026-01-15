@@ -76,6 +76,21 @@ def main():
     # 检查依赖
     check_dependencies()
 
+    # 初始化配置路径管理器
+    logger.info("正在初始化配置管理器...")
+    from src.config_manager import get_config_path_manager
+
+    config_path_manager = get_config_path_manager()
+
+    # 检查是否首次运行
+    if config_path_manager.is_first_run():
+        logger.info("检测到首次运行，正在初始化配置...")
+        config_path_manager.initialize_on_first_run()
+        logger.info("首次运行初始化完成")
+    else:
+        # 尝试迁移旧配置
+        config_path_manager.migrate_old_config()
+
     # 导入GUI模块
     try:
         # 优先使用 PyQt5

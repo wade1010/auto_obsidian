@@ -159,14 +159,25 @@ class MainWindow(QMainWindow):
             from src.file_manager import FileManager
             from src.git_manager import GitManager
             from src.scheduler import NoteScheduler
+            from src.crypto_utils import get_crypto_manager
 
             self.config = config
 
-            # 初始化笔记生成器
+            # 获取 AI 配置
             ai_config = config.get("ai", {})
+
+            # 解密 API key
+            encrypted_api_key = ai_config.get("api_key", "")
+            crypto_manager = get_crypto_manager()
+            api_key = crypto_manager.decrypt(encrypted_api_key)
+
+            if not api_key:
+                logger.warning("API Key 为空，系统可能无法正常工作")
+
+            # 初始化笔记生成器
             self.note_generator = NoteGenerator(
                 provider_name=ai_config.get("provider", "chatglm"),
-                api_key=ai_config.get("api_key", ""),
+                api_key=api_key,
                 model=ai_config.get("model", "glm-4")
             )
 
@@ -225,28 +236,32 @@ class MainWindow(QMainWindow):
             event.ignore()
 
 
-def load_config(config_path: str = "config/config.yaml") -> dict:
+def load_config(config_path: str = None) -> dict:
     """
     加载配置文件
 
     Args:
-        config_path: 配置文件路径
+        config_path: 配置文件路径（已废弃，保留用于向后兼容）
 
     Returns:
         配置字典
     """
     try:
         import yaml
+        from src.config_manager import get_config_path_manager
 
-        config_file = Path(config_path)
+        # 使用配置路径管理器获取配置文件路径
+        config_path_manager = get_config_path_manager()
+        config_file = config_path_manager.get_config_file()
+
         if not config_file.exists():
-            logger.warning(f"配置文件不存在: {config_path}")
+            logger.warning(f"配置文件不存在: {config_file}")
             return {}
 
         with open(config_file, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
 
-        logger.info(f"配置文件加载成功: {config_path}")
+        logger.info(f"配置文件加载成功: {config_file}")
         return config
 
     except Exception as e:

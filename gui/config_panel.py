@@ -267,15 +267,43 @@ class ConfigPanel(QWidget):
             import sys
             from pathlib import Path
 
-            # 导入加密工具
+            # 导入加密工具和配置路径管理器
             project_root = Path(__file__).parent.parent
             if str(project_root) not in sys.path:
                 sys.path.insert(0, str(project_root))
 
             from src.crypto_utils import get_crypto_manager
+            from src.config_manager import get_config_path_manager
 
-            # 获取 API key
-            api_key = self.api_key_edit.text()
+            # ========== 验证必填字段 ==========
+            errors = []
+
+            # 1. 验证 API Key
+            api_key = self.api_key_edit.text().strip()
+            if not api_key:
+                errors.append("API Key 不能为空")
+
+            # 2. 验证保存目录
+            save_dir = self.save_dir_edit.text().strip()
+            if not save_dir:
+                errors.append("保存目录不能为空")
+            elif not Path(save_dir).exists():
+                errors.append(f"保存目录不存在:\n{save_dir}")
+
+            # 3. 验证文件名格式
+            filename_format = self.filename_format_edit.text().strip()
+            if not filename_format:
+                errors.append("文件名格式不能为空")
+
+            # 如果有错误，显示并返回
+            if errors:
+                QMessageBox.warning(
+                    self,
+                    "配置验证失败",
+                    "以下配置项需要修正:\n\n" + "\n".join(f"• {error}" for error in errors)
+                )
+                logger.warning(f"配置验证失败: {errors}")
+                return
 
             # 加密 API key
             crypto_manager = get_crypto_manager()
@@ -289,8 +317,8 @@ class ConfigPanel(QWidget):
             # 收集配置
             self.config = {
                 "obsidian": {
-                    "save_dir": self.save_dir_edit.text(),
-                    "filename_format": self.filename_format_edit.text()
+                    "save_dir": save_dir,
+                    "filename_format": filename_format
                 },
                 "ai": {
                     "provider": self.provider_combo.currentText(),
@@ -306,20 +334,19 @@ class ConfigPanel(QWidget):
                 }
             }
 
-            # 保存到文件
-            config_file = Path("config/config.yaml")
+            # 获取配置文件路径并保存
+            config_path_manager = get_config_path_manager()
+            config_file = config_path_manager.get_config_file()
             config_file.parent.mkdir(parents=True, exist_ok=True)
 
             with open(config_file, 'w', encoding='utf-8') as f:
                 yaml.dump(self.config, f, allow_unicode=True)
 
             # 将保存目录添加到历史记录
-            save_dir = self.save_dir_edit.text()
-            if save_dir:
-                self._add_to_history(save_dir)
+            self._add_to_history(save_dir)
 
             QMessageBox.information(self, "成功", "配置已保存\n(API Key 已加密)")
-            logger.info("配置已保存到 config/config.yaml")
+            logger.info(f"配置已保存到 {config_file}")
 
         except Exception as e:
             QMessageBox.critical(
@@ -336,20 +363,24 @@ class ConfigPanel(QWidget):
             import sys
             from pathlib import Path
 
-            config_file = Path("config/config.yaml")
-            if not config_file.exists():
-                QMessageBox.warning(self, "警告", "配置文件不存在")
-                return
-
-            with open(config_file, 'r', encoding='utf-8') as f:
-                self.config = yaml.safe_load(f)
-
-            # 导入加密工具
+            # 导入加密工具和配置路径管理器
             project_root = Path(__file__).parent.parent
             if str(project_root) not in sys.path:
                 sys.path.insert(0, str(project_root))
 
             from src.crypto_utils import get_crypto_manager
+            from src.config_manager import get_config_path_manager
+
+            # 获取配置文件路径
+            config_path_manager = get_config_path_manager()
+            config_file = config_path_manager.get_config_file()
+
+            if not config_file.exists():
+                QMessageBox.warning(self, "警告", f"配置文件不存在\n{config_file}")
+                return
+
+            with open(config_file, 'r', encoding='utf-8') as f:
+                self.config = yaml.safe_load(f)
 
             # 更新UI
             obsidian_config = self.config.get("obsidian", {})
@@ -430,8 +461,11 @@ class ConfigPanel(QWidget):
                 sys.path.insert(0, str(project_root))
 
             import json
+            from src.config_manager import get_config_path_manager
 
-            history_file = project_root / "config" / "dir_history.json"
+            # 获取历史记录文件路径
+            config_path_manager = get_config_path_manager()
+            history_file = config_path_manager.get_dir_history_file()
 
             if history_file.exists():
                 with open(history_file, 'r', encoding='utf-8') as f:
@@ -456,8 +490,11 @@ class ConfigPanel(QWidget):
                 sys.path.insert(0, str(project_root))
 
             import json
+            from src.config_manager import get_config_path_manager
 
-            history_file = project_root / "config" / "dir_history.json"
+            # 获取历史记录文件路径
+            config_path_manager = get_config_path_manager()
+            history_file = config_path_manager.get_dir_history_file()
 
             # 确保config目录存在
             history_file.parent.mkdir(parents=True, exist_ok=True)
