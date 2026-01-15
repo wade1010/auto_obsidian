@@ -1,0 +1,21 @@
+# Auto Obsidian - AI Learning Notes Generator
+# Dependencies List
+
+# GUI Framework (PyQt5 is more stable on Windows)
+PyQt5>=5.15.0
+
+# AI SDK
+zhipuai>=2.0.0
+openai>=1.0.0
+
+# Configuration
+PyYAML>=6.0
+
+# Git Operations
+GitPython>=3.1.0
+
+# Scheduler
+APScheduler>=3.10.0
+
+# Build Tool
+pyinstaller>=6.0.0
