@@ -191,6 +191,23 @@ class SchedulerPanel(QWidget):
         btn_layout.addWidget(self.reset_btn)
         layout.addLayout(btn_layout)
 
+        # 通知设置
+        notification_layout = QHBoxLayout()
+        self.tray_notification_checkbox = QCheckBox("启用系统托盘通知")
+        self.tray_notification_checkbox.setChecked(True)
+        notification_layout.addWidget(self.tray_notification_checkbox)
+
+        self.popup_notification_checkbox = QCheckBox("启用弹窗通知")
+        self.popup_notification_checkbox.setChecked(True)
+        notification_layout.addWidget(self.popup_notification_checkbox)
+
+        notification_layout.addStretch()
+        layout.addLayout(notification_layout)
+
+        # 连接信号
+        self.tray_notification_checkbox.stateChanged.connect(self._on_notification_settings_changed)
+        self.popup_notification_checkbox.stateChanged.connect(self._on_notification_settings_changed)
+
         group.setLayout(layout)
         return group
 
@@ -558,3 +575,23 @@ class SchedulerPanel(QWidget):
             self.log_text.setTextCursor(cursor)
         except Exception as e:
             logger.error(f"追加日志失败: {e}")
+
+    def _on_notification_settings_changed(self):
+        """通知设置变化事件"""
+        try:
+            main_window = self._get_main_window()
+            if not main_window or not main_window.notification_manager:
+                return
+
+            tray_enabled = self.tray_notification_checkbox.isChecked()
+            popup_enabled = self.popup_notification_checkbox.isChecked()
+
+            main_window.notification_manager.set_notifications_enabled(
+                tray_enabled=tray_enabled,
+                popup_enabled=popup_enabled
+            )
+
+            logger.info(f"通知设置已更新: 托盘={tray_enabled}, 弹窗={popup_enabled}")
+
+        except Exception as e:
+            logger.error(f"更新通知设置失败: {e}")

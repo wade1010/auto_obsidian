@@ -17,5 +17,8 @@ GitPython>=3.1.0
 # Scheduler
 APScheduler>=3.10.0
 
+# Charts and Visualization
+pyqtgraph>=0.13.0
+
 # Build Tool
 pyinstaller>=6.0.0

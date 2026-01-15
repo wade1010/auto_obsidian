@@ -50,6 +50,7 @@ class MainWindow(QMainWindow):
         self.file_manager = None
         self.git_manager = None
         self.scheduler = None
+        self.notification_manager = None
 
         # 初始化UI
         self._init_ui()
@@ -103,6 +104,7 @@ class MainWindow(QMainWindow):
             from gui.config_panel import ConfigPanel
             from gui.note_panel import NotePanel
             from gui.scheduler_panel import SchedulerPanel
+            from gui.stats_panel import StatsPanel
 
             # 配置面板
             self.config_panel = ConfigPanel()
@@ -115,6 +117,10 @@ class MainWindow(QMainWindow):
             # 笔记生成面板
             self.note_panel = NotePanel()
             self.tab_widget.addTab(self.note_panel, "生成笔记")
+
+            # 数据统计面板
+            self.stats_panel = StatsPanel()
+            self.tab_widget.addTab(self.stats_panel, "数据统计")
 
             logger.info("所有面板加载完成")
 
@@ -160,8 +166,12 @@ class MainWindow(QMainWindow):
             from src.git_manager import GitManager
             from src.scheduler import NoteScheduler
             from src.crypto_utils import get_crypto_manager
+            from src.notification_manager import NotificationManager
 
             self.config = config
+
+            # 初始化通知管理器
+            self.notification_manager = NotificationManager(self)
 
             # 获取 AI 配置
             ai_config = config.get("ai", {})
@@ -204,6 +214,12 @@ class MainWindow(QMainWindow):
                 git_manager=self.git_manager
             )
 
+            # 连接通知管理器到调度器
+            self.scheduler.on_job_complete = self.notification_manager.notify_job_complete
+
+            # 设置统计面板的调度器
+            self.stats_panel.set_scheduler(self.scheduler)
+
             self.status_bar.showMessage("系统初始化完成")
             logger.info("所有管理器初始化完成")
 
@@ -217,23 +233,31 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """窗口关闭事件"""
-        reply = QMessageBox.question(
-            self,
-            '确认退出',
-            '确定要退出吗？定时任务将被停止。',
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No
-        )
-
-        if reply == QMessageBox.StandardButton.Yes:
-            # 停止调度器
-            if self.scheduler:
-                self.scheduler.shutdown()
-
-            logger.info("应用程序退出")
-            event.accept()
-        else:
+        # 隐藏到系统托盘而不是退出
+        if self.notification_manager and self.notification_manager.tray_icon.isVisible():
+            self.hide()
+            self.status_bar.showMessage("程序已最小化到系统托盘")
+            logger.info("窗口隐藏到系统托盘")
             event.ignore()
+        else:
+            # 如果系统托盘不可用，则确认退出
+            reply = QMessageBox.question(
+                self,
+                '确认退出',
+                '确定要退出吗？定时任务将被停止。',
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # 停止调度器
+                if self.scheduler:
+                    self.scheduler.shutdown()
+
+                logger.info("应用程序退出")
+                event.accept()
+            else:
+                event.ignore()
 
 
 def load_config(config_path: str = None) -> dict:

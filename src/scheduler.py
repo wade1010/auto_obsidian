@@ -352,9 +352,19 @@ class NoteScheduler:
             f"失败 {self.stats['failed_count']}"
         )
 
-        # 调用回调函数
+        # 调用回调函数（转换为通知管理器期望的格式）
         if self.on_job_complete:
-            self.on_job_complete(results)
+            success_count = sum(1 for r in results if r["status"] == "success")
+            failed_count = sum(1 for r in results if r["status"] == "failed")
+            errors = [r["error"] for r in results if r["status"] == "failed"]
+
+            summary = {
+                "total": len(results),
+                "success": success_count,
+                "failed": failed_count,
+                "errors": errors
+            }
+            self.on_job_complete(summary)
 
     def execute_now(self, batch_size: int = None):
         """
