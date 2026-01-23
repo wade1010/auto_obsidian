@@ -29,13 +29,14 @@ class ChatGLMProvider(BaseAIProvider):
         "glm-3-turbo"
     ]
 
-    def __init__(self, api_key: str, model: str = "glm-4", **kwargs):
+    def __init__(self, api_key: str, model: str = "glm-4", base_url: str = None, **kwargs):
         """
         初始化ChatGLM提供者
 
         Args:
             api_key: 智谱AI的API密钥
             model: 模型名称，默认glm-4
+            base_url: API基础URL（可选），留空使用默认地址
             **kwargs: 其他配置参数
         """
         super().__init__(api_key, model, **kwargs)
@@ -52,8 +53,13 @@ class ChatGLMProvider(BaseAIProvider):
             )
 
         try:
-            self.client = ZhipuAI(api_key=api_key)
-            logger.info(f"ChatGLM客户端初始化成功，使用模型: {model}")
+            # 初始化客户端，支持自定义 base_url
+            if base_url:
+                self.client = ZhipuAI(api_key=api_key, base_url=base_url)
+                logger.info(f"ChatGLM客户端初始化成功，使用模型: {model}，自定义地址: {base_url}")
+            else:
+                self.client = ZhipuAI(api_key=api_key)
+                logger.info(f"ChatGLM客户端初始化成功，使用模型: {model}，默认地址")
         except Exception as e:
             logger.error(f"ChatGLM客户端初始化失败: {e}")
             raise

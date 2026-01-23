@@ -184,11 +184,15 @@ class MainWindow(QMainWindow):
             if not api_key:
                 logger.warning("API Key 为空，系统可能无法正常工作")
 
+            # 获取 base_url（可选）
+            base_url = ai_config.get("base_url")
+
             # 初始化笔记生成器
             self.note_generator = NoteGenerator(
                 provider_name=ai_config.get("provider", "chatglm"),
                 api_key=api_key,
-                model=ai_config.get("model", "glm-4")
+                model=ai_config.get("model", "glm-4"),
+                base_url=base_url  # 传递 base_url 参数
             )
 
             # 初始化文件管理器

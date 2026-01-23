@@ -129,6 +129,14 @@ class ConfigPanel(QWidget):
         key_layout.addWidget(self.api_key_edit)
         layout.addLayout(key_layout)
 
+        # Base URL（可选）
+        url_layout = QHBoxLayout()
+        url_layout.addWidget(QLabel("Base URL:"))
+        self.base_url_edit = QLineEdit()
+        self.base_url_edit.setPlaceholderText("留空使用默认地址，或输入自定义API地址")
+        url_layout.addWidget(self.base_url_edit)
+        layout.addLayout(url_layout)
+
         # 模型选择
         model_layout = QHBoxLayout()
         model_layout.addWidget(QLabel("模型:"))
@@ -323,6 +331,7 @@ class ConfigPanel(QWidget):
                 "ai": {
                     "provider": self.provider_combo.currentText(),
                     "api_key": encrypted_key,  # 保存加密后的 API key
+                    "base_url": self.base_url_edit.text().strip() or None,  # 可选，空字符串则不保存
                     "model": self.model_combo.currentText(),
                     "language": self.language_combo.currentText(),
                     "style": self.style_combo.currentText()
@@ -406,6 +415,10 @@ class ConfigPanel(QWidget):
                     logger.info("API key 已解密")
                 else:
                     logger.warning("API key 是加密的，但 cryptography 库不可用")
+
+            # 加载 base_url（可选）
+            base_url = ai_config.get("base_url", "")
+            self.base_url_edit.setText(base_url)
 
             model = ai_config.get("model", "glm-4")
             index = self.model_combo.findText(model)
