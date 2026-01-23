@@ -56,6 +56,9 @@ class NoteGenerator:
             )
 
         try:
+            logger.info(f"创建AI提供者，provider={self.provider_name}, model={self.model}")
+            logger.info(f"配置参数: {self.config}")
+
             provider = provider_class(
                 api_key=self.api_key,
                 model=self.model,

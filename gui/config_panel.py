@@ -142,7 +142,6 @@ class ConfigPanel(QWidget):
         model_layout.addWidget(QLabel("模型:"))
         self.model_combo = QComboBox()
         self.model_combo.addItems([
-            "glm-4",
             "glm-4.7",
             "glm-4-plus",
             "glm-4-flash",
@@ -223,6 +222,7 @@ class ConfigPanel(QWidget):
         api_key = self.api_key_edit.text()
         provider = self.provider_combo.currentText()
         model = self.model_combo.currentText()
+        base_url = self.base_url_edit.text().strip() or None  # 获取 base_url
 
         if not api_key:
             QMessageBox.warning(self, "警告", "请先输入API Key")
@@ -239,18 +239,26 @@ class ConfigPanel(QWidget):
 
             from src.note_generator import NoteGenerator
 
+            # 准备额外配置参数
+            extra_config = {}
+            if base_url:
+                extra_config['base_url'] = base_url
+                logger.info(f"测试连接使用自定义 base_url: {base_url}")
+
             # 创建临时生成器进行测试
             generator = NoteGenerator(
                 provider_name=provider,
                 api_key=api_key,
-                model=model
+                model=model,
+                **extra_config  # 传递 base_url
             )
 
             if generator.test_connection():
+                base_url_info = f"\nAPI地址: {base_url}" if base_url else ""
                 QMessageBox.information(
                     self,
                     "成功",
-                    f"连接测试成功！\n服务商: {provider}\n模型: {model}"
+                    f"连接测试成功！\n服务商: {provider}\n模型: {model}{base_url_info}"
                 )
                 logger.info("API连接测试成功")
             else:

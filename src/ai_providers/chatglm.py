@@ -54,10 +54,13 @@ class ChatGLMProvider(BaseAIProvider):
 
         try:
             # 初始化客户端，支持自定义 base_url
+            logger.info(f"准备初始化ChatGLM客户端，base_url参数: {base_url}")
             if base_url:
+                logger.info(f"使用自定义 base_url: {base_url}")
                 self.client = ZhipuAI(api_key=api_key, base_url=base_url)
                 logger.info(f"ChatGLM客户端初始化成功，使用模型: {model}，自定义地址: {base_url}")
             else:
+                logger.info("使用默认 base_url")
                 self.client = ZhipuAI(api_key=api_key)
                 logger.info(f"ChatGLM客户端初始化成功，使用模型: {model}，默认地址")
         except Exception as e:
