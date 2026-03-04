@@ -5,12 +5,36 @@
 ## 功能特性
 
 - **多种AI支持**: ChatGLM (智谱AI)、OpenAI、火山引擎(豆包)、MiniMax
+- **模型自定义**: 支持下拉选择预设模型，也可以手动输入任意模型名称
 - **手动生成**: 输入主题即可生成详细的学习笔记
+- **流式输出**: 生成内容实时显示，更好的用户体验
 - **定时任务**: 支持每天、每小时、自定义间隔自动生成
 - **批量生成**: 每次可生成多篇笔记
 - **自动化流程**: 生成 → 保存 → Git提交 → 推送
 - **图形界面**: 基于PyQt6的友好GUI界面
 
+## 更新日志
+
+### v1.1.1 (2026-03-04)
+
+**新增功能**:
+- 🔥 新增火山引擎(Volcengine) AI服务商支持
+- 🔥 新增MiniMax AI服务商支持
+- ✨ 模型下拉框支持手动输入任意模型名称
+- ✨ 火山引擎模型列表默认添加ark-code-latest
+
+**功能改进**:
+- 🚀 更新所有内置模型到最新版本
+  - ChatGLM: glm-4.7, glm-4.7-flash, glm-4-plus, glm-4-flash, glm-4-air, glm-4-airx, glm-4-long, glm-3-turbo
+  - OpenAI: gpt-4.5-preview, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-4, gpt-3.5-turbo
+  - 火山引擎: ark-code-latest, doubao-seed-latest, doubao-pro-256k-vision, doubao-pro-32k-vision, doubao-pro-vision, doubao-pro-256k, doubao-pro-32k, doubao-pro, doubao-lite-vision, doubao-lite-256k, doubao-lite-32k, doubao-lite, doubao-turbo-vision, doubao-turbo-256k, doubao-turbo-32k, doubao-turbo (共17个模型)
+  - MiniMax: abab6.5s, abab6.5g, abab6.5t, abab6.5, abab6, abab5.5s
+- 🎯 添加窗口居中显示功能
+- 📝 添加详细的调试日志
+- 🔧 修复重载配置时模型被错误重置的问题
+- 🔧 修复Windows下Git操作时的编码问题
+- 🔄 重新启用流式输出，提供更好的用户体验
+- 🛡️ 添加健壮的流式输出错误处理
 ## 安装
 
 ### 1. 克隆或下载项目
