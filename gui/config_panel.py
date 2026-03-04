@@ -18,6 +18,63 @@ logger = logging.getLogger(__name__)
 class ConfigPanel(QWidget):
     """配置面板"""
 
+    # 各服务商预设模型
+    PROVIDER_MODELS = {
+        "chatglm": [
+            "glm-4.7",
+            "glm-4.7-flash",
+            "glm-4-plus",
+            "glm-4-flash",
+            "glm-4-air",
+            "glm-4-airx",
+            "glm-4-long",
+            "glm-3-turbo"
+        ],
+        "openai": [
+            "gpt-4.5-preview",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4-turbo",
+            "gpt-4",
+            "gpt-3.5-turbo"
+        ],
+        "volcengine": [
+            "ark-code-latest",
+            "doubao-seed-latest",
+            "doubao-seed-2-5-251215",
+            "doubao-pro-256k-vision",
+            "doubao-pro-32k-vision",
+            "doubao-pro-vision",
+            "doubao-pro-256k",
+            "doubao-pro-32k",
+            "doubao-pro",
+            "doubao-lite-vision",
+            "doubao-lite-256k",
+            "doubao-lite-32k",
+            "doubao-lite",
+            "doubao-turbo-vision",
+            "doubao-turbo-256k",
+            "doubao-turbo-32k",
+            "doubao-turbo"
+        ],
+        "minimax": [
+            "abab6.5s",
+            "abab6.5g",
+            "abab6.5t",
+            "abab6.5",
+            "abab6",
+            "abab5.5s"
+        ]
+    }
+
+    # 各服务商默认Base URL
+    PROVIDER_DEFAULT_URLS = {
+        "chatglm": "",
+        "openai": "",
+        "volcengine": "https://ark.cn-beijing.volces.com/api/v3",
+        "minimax": "https://api.minimax.chat/v1"
+    }
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.config = {}
@@ -116,7 +173,8 @@ class ConfigPanel(QWidget):
         provider_layout = QHBoxLayout()
         provider_layout.addWidget(QLabel("AI服务商:"))
         self.provider_combo = QComboBox()
-        self.provider_combo.addItems(["chatglm", "openai"])
+        self.provider_combo.addItems(["chatglm", "openai", "volcengine", "minimax"])
+        self.provider_combo.currentTextChanged.connect(self._on_provider_changed)
         provider_layout.addWidget(self.provider_combo)
         layout.addLayout(provider_layout)
 
@@ -137,17 +195,12 @@ class ConfigPanel(QWidget):
         url_layout.addWidget(self.base_url_edit)
         layout.addLayout(url_layout)
 
-        # 模型选择
+        # 模型选择（可编辑）
         model_layout = QHBoxLayout()
         model_layout.addWidget(QLabel("模型:"))
         self.model_combo = QComboBox()
-        self.model_combo.addItems([
-            "glm-4.7",
-            "glm-4-plus",
-            "glm-4-flash",
-            "glm-4-air",
-            "glm-3-turbo"
-        ])
+        self.model_combo.setEditable(True)  # 允许手动输入
+        self.model_combo.addItems(self.PROVIDER_MODELS["chatglm"])
         model_layout.addWidget(self.model_combo)
         layout.addLayout(model_layout)
 
@@ -205,6 +258,41 @@ class ConfigPanel(QWidget):
         group.setLayout(layout)
         return group
 
+    def _on_provider_changed(self, provider: str):
+        """服务商切换时更新模型列表和默认Base URL"""
+        logger.info(f"[_on_provider_changed] 服务商切换为: {provider}")
+        try:
+            # 更新模型列表
+            current_model = self.model_combo.currentText()
+            logger.info(f"[_on_provider_changed] 当前模型: {current_model}")
+            
+            self.model_combo.clear()
+            models = self.PROVIDER_MODELS.get(provider, [])
+            logger.info(f"[_on_provider_changed] 加载 {len(models)} 个模型")
+            self.model_combo.addItems(models)
+            
+            # 如果当前模型在新列表中，保持选中；否则选择第一个
+            if current_model in models:
+                index = self.model_combo.findText(current_model)
+                if index >= 0:
+                    self.model_combo.setCurrentIndex(index)
+                    logger.info(f"[_on_provider_changed] 保持选中模型: {current_model}")
+            elif models:
+                self.model_combo.setCurrentIndex(0)
+                logger.info(f"[_on_provider_changed] 选中第一个模型: {models[0]}")
+            
+            # 如果Base URL为空，设置默认值
+            if not self.base_url_edit.text().strip():
+                default_url = self.PROVIDER_DEFAULT_URLS.get(provider, "")
+                self.base_url_edit.setText(default_url)
+                logger.info(f"[_on_provider_changed] 设置默认 base_url: {default_url}")
+            else:
+                logger.info(f"[_on_provider_changed] 保持用户自定义 base_url")
+                
+            logger.info(f"[_on_provider_changed] 服务商切换完成")
+        except Exception as e:
+            logger.error(f"[_on_provider_changed] 服务商切换出错: {e}", exc_info=True)
+            raise
     def _browse_directory(self):
         """浏览选择目录"""
         directory = QFileDialog.getExistingDirectory(
@@ -219,16 +307,23 @@ class ConfigPanel(QWidget):
 
     def _test_connection(self):
         """测试API连接"""
+        logger.info("[_test_connection] 开始测试API连接")
         api_key = self.api_key_edit.text()
         provider = self.provider_combo.currentText()
         model = self.model_combo.currentText()
         base_url = self.base_url_edit.text().strip() or None  # 获取 base_url
+        
+        logger.info(f"[_test_connection] 参数 - provider: {provider}, model: {model}, base_url: {base_url}")
 
         if not api_key:
+            logger.warning("[_test_connection] API Key为空")
             QMessageBox.warning(self, "警告", "请先输入API Key")
             return
+        
+        logger.info("[_test_connection] API Key已提供")
 
         try:
+            logger.info("[_test_connection] 准备导入模块...")
             import sys
             from pathlib import Path
 
@@ -236,15 +331,19 @@ class ConfigPanel(QWidget):
             project_root = Path(__file__).parent.parent
             if str(project_root) not in sys.path:
                 sys.path.insert(0, str(project_root))
+            logger.info(f"[_test_connection] 项目根目录: {project_root}")
 
+            logger.info("[_test_connection] 导入NoteGenerator...")
             from src.note_generator import NoteGenerator
+            logger.info("[_test_connection] NoteGenerator导入成功")
 
             # 准备额外配置参数
             extra_config = {}
             if base_url:
                 extra_config['base_url'] = base_url
-                logger.info(f"测试连接使用自定义 base_url: {base_url}")
-
+                logger.info(f"[_test_connection] 使用自定义 base_url: {base_url}")
+            
+            logger.info("[_test_connection] 创建NoteGenerator实例...")
             # 创建临时生成器进行测试
             generator = NoteGenerator(
                 provider_name=provider,
@@ -252,8 +351,11 @@ class ConfigPanel(QWidget):
                 model=model,
                 **extra_config  # 传递 base_url
             )
-
+            logger.info("[_test_connection] NoteGenerator创建成功")
+            
+            logger.info("[_test_connection] 开始连接测试...")
             if generator.test_connection():
+                logger.info("[_test_connection] 连接测试成功")
                 base_url_info = f"\nAPI地址: {base_url}" if base_url else ""
                 QMessageBox.information(
                     self,
@@ -262,20 +364,27 @@ class ConfigPanel(QWidget):
                 )
                 logger.info("API连接测试成功")
             else:
+                logger.warning("[_test_connection] 连接测试失败")
                 QMessageBox.critical(
                     self,
                     "失败",
                     "连接测试失败，请检查API Key和网络连接"
                 )
-
+            
+        except ImportError as e:
+            logger.error(f"[_test_connection] 导入模块失败: {e}", exc_info=True)
+            QMessageBox.critical(
+                self,
+                "错误",
+                f"导入模块失败:\n{str(e)}"
+            )
         except Exception as e:
+            logger.error(f"[_test_connection] API连接测试失败: {e}", exc_info=True)
             QMessageBox.critical(
                 self,
                 "错误",
                 f"连接测试出错:\n{str(e)}"
             )
-            logger.error(f"API连接测试失败: {e}")
-
     def _save_config(self):
         """保存配置"""
         try:
@@ -399,7 +508,7 @@ class ConfigPanel(QWidget):
             with open(config_file, 'r', encoding='utf-8') as f:
                 self.config = yaml.safe_load(f)
 
-            # 更新UI
+            # 更新UI - 注意：先禁用信号，避免触发_on_provider_changed
             obsidian_config = self.config.get("obsidian", {})
             self.save_dir_edit.setText(obsidian_config.get("save_dir", ""))
             self.filename_format_edit.setText(
@@ -408,9 +517,40 @@ class ConfigPanel(QWidget):
 
             ai_config = self.config.get("ai", {})
             provider = ai_config.get("provider", "chatglm")
+            model = ai_config.get("model", "glm-4")
+            base_url = ai_config.get("base_url", "")
+            
+            logger.info(f"[_reload_config] 从配置文件读取: provider={provider}, model={model}")
+            
+            # 先临时断开信号，避免重复触发
+            try:
+                self.provider_combo.currentTextChanged.disconnect(self._on_provider_changed)
+            except:
+                pass
+            
+            # 设置服务商
             index = self.provider_combo.findText(provider)
             if index >= 0:
                 self.provider_combo.setCurrentIndex(index)
+            
+            # 手动更新模型列表
+            self.model_combo.clear()
+            models = self.PROVIDER_MODELS.get(provider, [])
+            self.model_combo.addItems(models)
+            logger.info(f"[_reload_config] 加载 {len(models)} 个模型")
+            
+            # 设置模型
+            index = self.model_combo.findText(model)
+            if index >= 0:
+                self.model_combo.setCurrentIndex(index)
+                logger.info(f"[_reload_config] 设置模型: {model}")
+            else:
+                self.model_combo.addItem(model)
+                self.model_combo.setCurrentText(model)
+                logger.info(f"[_reload_config] 添加并设置新模型: {model}")
+            
+            # 重新连接信号
+            self.provider_combo.currentTextChanged.connect(self._on_provider_changed)
 
             # 解密 API key
             encrypted_key = ai_config.get("api_key", "")
@@ -425,14 +565,7 @@ class ConfigPanel(QWidget):
                     logger.warning("API key 是加密的，但 cryptography 库不可用")
 
             # 加载 base_url（可选）
-            base_url = ai_config.get("base_url", "")
             self.base_url_edit.setText(base_url)
-
-            model = ai_config.get("model", "glm-4")
-            index = self.model_combo.findText(model)
-            if index >= 0:
-                self.model_combo.setCurrentIndex(index)
-
             language = ai_config.get("language", "中文")
             index = self.language_combo.findText(language)
             if index >= 0:

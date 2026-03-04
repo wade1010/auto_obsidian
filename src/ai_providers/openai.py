@@ -21,11 +21,12 @@ class OpenAIProvider(BaseAIProvider):
 
     # 支持的模型列表
     AVAILABLE_MODELS = [
-        "gpt-4",
-        "gpt-4-turbo",
+        "gpt-4.5-preview",
         "gpt-4o",
-        "gpt-3.5-turbo",
-        "gpt-3.5-turbo-16k"
+        "gpt-4o-mini",
+        "gpt-4-turbo",
+        "gpt-4",
+        "gpt-3.5-turbo"
     ]
 
     def __init__(self, api_key: str, model: str = "gpt-3.5-turbo",
@@ -59,7 +60,7 @@ class OpenAIProvider(BaseAIProvider):
 
     def generate(self, prompt: str, temperature: float = 0.7,
                  max_tokens: int = 4000, top_p: float = 0.9,
-                 **kwargs) -> str:
+                 stream: bool = False, **kwargs):
         """
         生成文本
 
@@ -68,10 +69,12 @@ class OpenAIProvider(BaseAIProvider):
             temperature: 温度参数
             max_tokens: 最大token数
             top_p: 核采样参数
+            stream: 是否使用流式输出
             **kwargs: 其他参数
 
         Returns:
-            生成的文本内容
+            如果stream=False，返回生成的文本内容
+            如果stream=True，返回生成器，yield每个文本块
         """
         try:
             response = self.client.chat.completions.create(
@@ -82,18 +85,49 @@ class OpenAIProvider(BaseAIProvider):
                 temperature=temperature,
                 max_tokens=max_tokens,
                 top_p=top_p,
+                stream=stream,
                 **kwargs
             )
 
-            content = response.choices[0].message.content
-            logger.debug(f"OpenAI生成成功，token使用: "
-                        f"{response.usage.total_tokens}")
-            return content
+            if stream:
+                # 流式输出：返回生成器
+                def stream_generator():
+                    full_content = ""
+                    try:
+                        for chunk in response:
+                            try:
+                                if hasattr(chunk, 'choices') and chunk.choices and len(chunk.choices) > 0:
+                                    choice = chunk.choices[0]
+                                    if hasattr(choice, 'delta'):
+                                        delta = choice.delta
+                                        if hasattr(delta, 'content') and delta.content:
+                                            content = delta.content
+                                            full_content += content
+                                            yield content
+                            except Exception as chunk_err:
+                                logger.warning(f"处理流式数据块时出错: {chunk_err}")
+                                continue  # 跳过这个块，继续处理下一个
+                        logger.debug(f"OpenAI流式生成完成，总字数: {len(full_content)}")
+                    except Exception as stream_err:
+                        logger.error(f"流式生成过程出错: {stream_err}", exc_info=True)
+                        # 如果已经生成了一些内容，返回已生成的内容
+                        if full_content:
+                            logger.info(f"返回已生成的部分内容: {len(full_content)} 字")
+                            yield full_content
+                        else:
+                            raise
+
+                return stream_generator()
+            else:
+                # 非流式：直接返回完整内容
+                content = response.choices[0].message.content
+                logger.debug(f"OpenAI生成成功，token使用: "
+                            f"{response.usage.total_tokens}")
+                return content
 
         except Exception as e:
             logger.error(f"OpenAI生成失败: {e}")
             raise
-
     def generate_note(self, topic: str, language: str = "中文",
                       style: str = "详细教程", **kwargs) -> str:
         """生成学习笔记"""

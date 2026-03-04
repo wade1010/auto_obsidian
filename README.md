@@ -4,7 +4,7 @@
 
 ## 功能特性
 
-- **多种AI支持**: ChatGLM (智谱AI)、OpenAI、Claude
+- **多种AI支持**: ChatGLM (智谱AI)、OpenAI、火山引擎(豆包)、MiniMax
 - **手动生成**: 输入主题即可生成详细的学习笔记
 - **定时任务**: 支持每天、每小时、自定义间隔自动生成
 - **批量生成**: 每次可生成多篇笔记
@@ -67,13 +67,15 @@ pyinstaller build_spec.py
 
 | 服务商 | provider | 模型示例 |
 |--------|----------|----------|
-| ChatGLM (智谱AI) | `chatglm` | glm-4, glm-4-plus, glm-4-flash |
-| OpenAI | `openai` | gpt-4, gpt-3.5-turbo |
-
+| ChatGLM (智谱AI) | `chatglm` | glm-4.7, glm-4.7-flash, glm-4-plus, glm-4-flash |
+| OpenAI | `openai` | gpt-4.5-preview, gpt-4o, gpt-4o-mini, gpt-4-turbo |
+| 火山引擎(豆包) | `volcengine` | doubao-seed-latest, doubao-pro, doubao-lite, doubao-turbo |
+| MiniMax | `minimax` | abab6.5s, abab6.5g, abab6.5, abab6 |
 获取API Key:
 - ChatGLM: https://open.bigmodel.cn/
 - OpenAI: https://platform.openai.com/
-
+- 火山引擎: https://console.volcengine.com/ark
+- MiniMax: https://platform.minimaxi.com/
 ### 定时任务配置
 
 支持三种模式：

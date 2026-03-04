@@ -281,7 +281,7 @@ class NotePanel(QWidget):
         self.save_btn.setEnabled(False)
 
         try:
-            # 创建生成线程（使用流式输出）
+            # 创建生成线程（使用流式输出，更好的用户体验）
             logger.info(f"[_generate_note] 创建 GenerateThread...")
             self.generate_thread = GenerateThread(
                 main_window.note_generator,

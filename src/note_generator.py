@@ -19,6 +19,8 @@ class NoteGenerator:
     PROVIDERS = {
         "chatglm": ChatGLMProvider,
         "openai": OpenAIProvider,
+        "volcengine": OpenAIProvider,
+        "minimax": OpenAIProvider,
     }
 
     def __init__(self, provider_name: str, api_key: str,

@@ -294,7 +294,8 @@ class GitManager:
                     add_cmd,
                     cwd=str(self.repo_path),
                     capture_output=True,
-                    text=True,
+                    encoding='utf-8',
+                    errors='ignore',
                     timeout=30
                 )
 
@@ -313,7 +314,8 @@ class GitManager:
                     commit_cmd,
                     cwd=str(self.repo_path),
                     capture_output=True,
-                    text=True,
+                    encoding='utf-8',
+                    errors='ignore',
                     timeout=30
                 )
 
@@ -337,7 +339,8 @@ class GitManager:
                     push_cmd,
                     cwd=str(self.repo_path),
                     capture_output=True,
-                    text=True,
+                    encoding='utf-8',
+                    errors='ignore',
                     timeout=60
                 )
 

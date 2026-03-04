@@ -60,7 +60,10 @@ class MainWindow(QMainWindow):
     def _init_ui(self):
         """初始化用户界面"""
         self.setWindowTitle("AI学习笔记自动生成器 v1.0")
-        self.setGeometry(100, 100, 1000, 700)
+        self.resize(1000, 700)
+        
+        # 窗口居中显示（在加载面板之前）
+        self._center_window()
 
         # 创建中央部件
         central_widget = QWidget()
@@ -89,7 +92,6 @@ class MainWindow(QMainWindow):
 
         # 加载各个面板（稍后实现）
         self._load_panels()
-
     def _load_panels(self):
         """加载各个功能面板"""
         try:
@@ -143,6 +145,32 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(placeholder, "配置")
         self.tab_widget.addTab(placeholder, "定时任务")
         self.tab_widget.addTab(placeholder, "生成笔记")
+    def _center_window(self):
+        """将窗口居中显示"""
+        try:
+            if PYQT_VERSION == 5:
+                from PyQt5.QtWidgets import QDesktopWidget
+            else:
+                from PyQt6.QtWidgets import QScreen
+            
+            # 获取屏幕尺寸
+            if PYQT_VERSION == 5:
+                screen = QDesktopWidget().screenGeometry()
+            else:
+                screen = QScreen.availableGeometry(QApplication.primaryScreen())
+            
+            # 获取窗口尺寸
+            window = self.geometry()
+            
+            # 计算居中位置
+            x = (screen.width() - window.width()) // 2
+            y = (screen.height() - window.height()) // 2
+            
+            # 移动窗口
+            self.move(x, y)
+            logger.info(f"窗口已居中: ({x}, {y})")
+        except Exception as e:
+            logger.warning(f"窗口居中失败: {e}")
 
     def initialize_managers(self, config):
         """

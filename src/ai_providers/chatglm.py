@@ -21,11 +21,13 @@ class ChatGLMProvider(BaseAIProvider):
 
     # 支持的模型列表
     AVAILABLE_MODELS = [
-        "glm-4",
         "glm-4.7",
+        "glm-4.7-flash",
         "glm-4-plus",
         "glm-4-flash",
         "glm-4-air",
+        "glm-4-airx",
+        "glm-4-long",
         "glm-3-turbo"
     ]
 
